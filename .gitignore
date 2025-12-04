@@ -1,0 +1,11 @@
+.storage/
+.cloud/
+.translations/
+.HA_VERSION
+deps/
+.python_history
+*.db
+*.db-shm
+*.db-wal
+*.log
+*.yaml.save
