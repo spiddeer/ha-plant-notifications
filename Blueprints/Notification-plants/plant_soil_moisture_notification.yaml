@@ -1,0 +1,135 @@
+blueprint:
+  name: Plant Soil Moisture Notifications
+  description: Send notifications when plant needs water and when it's been watered
+  domain: automation
+  author: Home Assistant User
+  
+  input:
+    plant_name:
+      name: Plant Name
+      description: Display name of the plant
+      selector:
+        text:
+    soil_moisture_sensor:
+      name: Soil Moisture Sensor
+      description: Entity ID of the soil moisture sensor
+      selector:
+        entity:
+          domain: sensor
+          device_class: moisture
+    thirsty_threshold:
+      name: Thirsty Threshold
+      description: Soil moisture percentage below which plant is considered thirsty
+      default: 20
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    watered_threshold:
+      name: Watered Threshold
+      description: Soil moisture percentage above which plant is considered watered
+      default: 40
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    watering_status_boolean:
+      name: Watering Status Boolean
+      description: Input boolean to track if plant needs water
+      selector:
+        entity:
+          domain: input_boolean
+    notify_device:
+      name: Mobile Device
+      description: Mobile device to receive notifications (leave empty to skip mobile notifications)
+      default: ""
+      selector:
+        device:
+          integration: mobile_app
+          multiple: false
+    notify_action:
+      name: Additional Notification Actions (Optional)
+      description: "Optional: Add additional notify actions for other services (Telegram, email, etc.)"
+      default: []
+      selector:
+        action:
+
+trigger:
+  - id: thirsty
+    trigger: numeric_state
+    entity_id: !input soil_moisture_sensor
+    below: !input thirsty_threshold
+  - id: watered
+    trigger: numeric_state
+    entity_id: !input soil_moisture_sensor
+    above: !input watered_threshold
+
+variables:
+  plant_name: !input plant_name
+  soil_moisture_sensor: !input soil_moisture_sensor
+  watering_status_boolean: !input watering_status_boolean
+  notify_device: !input notify_device
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: thirsty
+        sequence:
+          - target:
+              entity_id: !input watering_status_boolean
+            action: input_boolean.turn_on
+          - if:
+              - condition: template
+                value_template: "{{ notify_device != '' }}"
+            then:
+              - device_id: !input notify_device
+                domain: mobile_app
+                type: notify
+                title: "🌱 {{ plant_name }} behöver vatten"
+                message: "{{ now().strftime('%Y-%m-%d %H:%M') }} — Fukt: {{ states(soil_moisture_sensor) | float(0) | round(0) }}%"
+          - choose:
+              - conditions: []
+                sequence: !input notify_action
+          - data:
+              title: "🌱 {{ plant_name }} behöver vatten"
+              message: >
+                {{ now().strftime('%Y-%m-%d %H:%M') }} — Fukt: {{
+                states(soil_moisture_sensor) | float(0) | round(0) }}
+                %
+              notification_id: "plant_{{ watering_status_boolean | replace('input_boolean.', '') }}_alert"
+            action: persistent_notification.create
+      - conditions:
+          - condition: trigger
+            id: watered
+          - condition: state
+            entity_id: !input watering_status_boolean
+            state: "on"
+        sequence:
+          - if:
+              - condition: template
+                value_template: "{{ notify_device != '' }}"
+            then:
+              - device_id: !input notify_device
+                domain: mobile_app
+                type: notify
+                title: "🌱 {{ plant_name }} OK"
+                message: "{{ now().strftime('%Y-%m-%d %H:%M') }} — Fukt: {{ states(soil_moisture_sensor) | float(0) | round(0) }}%"
+          - choose:
+              - conditions: []
+                sequence: !input notify_action
+          - data:
+              title: "🌱 {{ plant_name }} OK"
+              message: >
+                {{ now().strftime('%Y-%m-%d %H:%M') }} — Fukt: {{
+                states(soil_moisture_sensor) | float(0) | round(0) }}
+                %
+              notification_id: "plant_{{ watering_status_boolean | replace('input_boolean.', '') }}_alert"
+            action: persistent_notification.create
+          - target:
+              entity_id: !input watering_status_boolean
+            action: input_boolean.turn_off
+
+mode: single
