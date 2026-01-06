@@ -48,11 +48,9 @@ blueprint:
     notify_device:
       name: Mobile Device
       description: Mobile device to receive notifications (leave empty to skip mobile notifications)
-      default: ""
       selector:
         device:
           integration: mobile_app
-          multiple: false
     notify_action:
       name: Additional Notification Actions (Optional)
       description: "Optional: Add additional notify actions for other services (Telegram, email, etc.)"
