@@ -37,7 +37,10 @@ blueprint:
           unit_of_measurement: "%"
     watering_status_boolean:
       name: Watering Status Boolean
-      description: Input boolean to track if plant needs water
+      description: >
+        Input boolean helper that tracks watering state. This prevents duplicate "needs water" 
+        notifications and ensures you only get a "watered" confirmation after the plant was thirsty.
+        Create one in Settings → Devices & Services → Helpers → Toggle, e.g., "Fredskallan needs water".
       selector:
         entity:
           domain: input_boolean

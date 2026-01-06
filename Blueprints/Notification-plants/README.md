@@ -45,7 +45,7 @@ After importing the blueprint, create a new automation and configure:
 | **Soil Moisture Sensor** | Entity ID of the sensor | `sensor.plant_2_soil_moisture` |
 | **Thirsty Threshold** | Moisture % to trigger "needs water" | `20` |
 | **Watered Threshold** | Moisture % to trigger "watered" confirmation | `40` |
-| **Watering Status Boolean** | Helper to track status | `input_boolean.fredskallan_behover_vatten` |
+| **Watering Status Boolean** | Toggle helper that tracks if plant is thirsty (prevents duplicate alerts) | `input_boolean.fredskallan_behover_vatten` |
 | **Mobile Device** | *(Optional)* Mobile device for push notifications | Select from dropdown |
 | **Additional Notification Actions** | *(Optional)* Custom actions for other services | Configure in UI |
 
