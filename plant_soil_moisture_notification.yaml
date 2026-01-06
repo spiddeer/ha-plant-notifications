@@ -41,16 +41,12 @@ blueprint:
       selector:
         entity:
           domain: input_boolean
-    notify_devices:
-      name: Notification Devices
-      description: Mobile app notification services to send alerts to
-      default: []
+    notify_service:
+      name: Notification Service
+      description: "Notify service to send alerts to (e.g., notify.mobile_app_your_phone or notify.all_devices). Create a notify group in configuration.yaml to send to multiple devices."
+      default: "notify.notify"
       selector:
-        select:
-          options:
-            - notify.mobile_app_pernilla_iphone
-            - notify.mobile_app_tobbes_iphone_16_pro
-          multiple: true
+        text:
 
 trigger:
   - id: thirsty
@@ -62,6 +58,11 @@ trigger:
     entity_id: !input soil_moisture_sensor
     above: !input watered_threshold
 
+variables:
+  plant_name: !input plant_name
+  soil_moisture_sensor: !input soil_moisture_sensor
+  watering_status_boolean: !input watering_status_boolean
+
 action:
   - choose:
       - conditions:
@@ -71,29 +72,27 @@ action:
           - target:
               entity_id: !input watering_status_boolean
             action: input_boolean.turn_on
-          - repeat:
-              for_each: !input notify_devices
-              sequence:
-                - data:
-                    title: "💧 Växtvarning - {{ !input plant_name }}"
-                    message: >
-                      {{ !input plant_name }} behöver vatten! Nuvarande fukt: {{
-                      states(!input soil_moisture_sensor) | float(0) | round(0) }}
-                      %
-                    data:
-                      push:
-                        sound:
-                          name: default
-                          critical: 0
-                          volume: 0.7
-                  action: "{{ repeat.item }}"
           - data:
-              title: "🌱 {{ !input plant_name }} behöver vatten"
+              title: "💧 Växtvarning - {{ plant_name }}"
+              message: >
+                {{ plant_name }} behöver vatten! Nuvarande fukt: {{
+                states(soil_moisture_sensor) | float(0) | round(0) }}
+                %
+              data:
+                push:
+                  sound:
+                    name: default
+                    critical: 0
+                    volume: 0.7
+            action: !input notify_service
+            alias: Send thirsty notification
+          - data:
+              title: "🌱 {{ plant_name }} behöver vatten"
               message: >
                 {{ now().strftime('%Y-%m-%d %H:%M') }} — Fukt: {{
-                states(!input soil_moisture_sensor) | float(0) | round(0) }}
+                states(soil_moisture_sensor) | float(0) | round(0) }}
                 %
-              notification_id: "plant_{{ !input watering_status_boolean | replace('input_boolean.', '') }}_alert"
+              notification_id: "plant_{{ watering_status_boolean | replace('input_boolean.', '') }}_alert"
             action: persistent_notification.create
       - conditions:
           - condition: trigger
@@ -102,22 +101,20 @@ action:
             entity_id: !input watering_status_boolean
             state: "on"
         sequence:
-          - repeat:
-              for_each: !input notify_devices
-              sequence:
-                - data:
-                    title: "✅ {{ !input plant_name }} vattnad"
-                    message: >
-                      Fukt är nu OK igen: {{ states(!input soil_moisture_sensor) |
-                      float(0) | round(0) }} %
-                  action: "{{ repeat.item }}"
           - data:
-              title: "🌱 {{ !input plant_name }} OK"
+              title: "✅ {{ plant_name }} vattnad"
+              message: >
+                Fukt är nu OK igen: {{ states(soil_moisture_sensor) |
+                float(0) | round(0) }} %
+            action: !input notify_service
+            alias: Send watered notification
+          - data:
+              title: "🌱 {{ plant_name }} OK"
               message: >
                 {{ now().strftime('%Y-%m-%d %H:%M') }} — Fukt: {{
-                states(!input soil_moisture_sensor) | float(0) | round(0) }}
+                states(soil_moisture_sensor) | float(0) | round(0) }}
                 %
-              notification_id: "plant_{{ !input watering_status_boolean | replace('input_boolean.', '') }}_alert"
+              notification_id: "plant_{{ watering_status_boolean | replace('input_boolean.', '') }}_alert"
             action: persistent_notification.create
           - target:
               entity_id: !input watering_status_boolean
