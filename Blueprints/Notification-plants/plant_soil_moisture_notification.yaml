@@ -1,6 +1,6 @@
 blueprint:
   name: Plant Soil Moisture Notifications
-  description: Send notifications when plant needs water and when it's been watered
+  description: Send notifications when plant needs water and when it's been watered (v2)
   domain: automation
   author: spiddeer
   source_url: https://github.com/spiddeer/ha-plant-notifications
