@@ -41,12 +41,12 @@ blueprint:
       selector:
         entity:
           domain: input_boolean
-    notify_service:
-      name: Notification Service
-      description: "Notify service to send alerts to (e.g., notify.mobile_app_your_phone or notify.all_devices). Create a notify group in configuration.yaml to send to multiple devices."
-      default: "notify.notify"
+    notify_action:
+      name: Notification Actions
+      description: "Actions to run when sending notifications. Add notify actions for your devices here."
+      default: []
       selector:
-        text:
+        action:
 
 trigger:
   - id: thirsty
@@ -72,20 +72,9 @@ action:
           - target:
               entity_id: !input watering_status_boolean
             action: input_boolean.turn_on
-          - data:
-              title: "💧 Växtvarning - {{ plant_name }}"
-              message: >
-                {{ plant_name }} behöver vatten! Nuvarande fukt: {{
-                states(soil_moisture_sensor) | float(0) | round(0) }}
-                %
-              data:
-                push:
-                  sound:
-                    name: default
-                    critical: 0
-                    volume: 0.7
-            action: !input notify_service
-            alias: Send thirsty notification
+          - choose:
+              - conditions: []
+                sequence: !input notify_action
           - data:
               title: "🌱 {{ plant_name }} behöver vatten"
               message: >
@@ -101,13 +90,9 @@ action:
             entity_id: !input watering_status_boolean
             state: "on"
         sequence:
-          - data:
-              title: "✅ {{ plant_name }} vattnad"
-              message: >
-                Fukt är nu OK igen: {{ states(soil_moisture_sensor) |
-                float(0) | round(0) }} %
-            action: !input notify_service
-            alias: Send watered notification
+          - choose:
+              - conditions: []
+                sequence: !input notify_action
           - data:
               title: "🌱 {{ plant_name }} OK"
               message: >
