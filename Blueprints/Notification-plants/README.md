@@ -40,7 +40,7 @@ Before using this blueprint, you need:
 After importing the blueprint, create a new automation and configure:
 
 | Parameter | Description | Example |
-|-----------|-------------|---------|
+| --------- | ----------- | ------- |
 | **Plant Name** | Display name of your plant | `Fredskallan` |
 | **Soil Moisture Sensor** | Entity ID of the sensor | `sensor.plant_2_soil_moisture` |
 | **Thirsty Threshold** | Moisture % to trigger "needs water" | `20` |
@@ -65,13 +65,15 @@ This blueprint will:
 ## Notification Examples
 
 **Thirsty Alert:**
-```
+
+```text
 💧 Växtvarning - Fredskallan
 Fredskallan behöver vatten! Nuvarande fukt: 18%
 ```
 
 **Watered Confirmation:**
-```
+
+```text
 ✅ Fredskallan vattnad
 Fukt är nu OK igen: 42%
 ```
